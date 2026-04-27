@@ -1,14 +1,14 @@
 [base]
-us2604
+us2404
 
 [ufw]
-us2604
+us2404
 
 [docker]
-us2604
+us2404
 
 [node_exporter]
-us2604
+us2404
 
 [gitlab_runner]
-us2604
+us2404
