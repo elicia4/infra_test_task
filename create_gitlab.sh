@@ -108,6 +108,7 @@ runner_token="$(curl -fsS -X POST \
   --url "${gitlab_domain}/api/v4/user/runners" \
   -H "PRIVATE-TOKEN: ${gitlab_private_token}" \
   -d "runner_type=instance_type" \
+  -d "tag_list=deploy" \
   | jq -r '.token')"
 sed -i "s|token: '.*'|token: '${runner_token}'|" \
   ./ansible/roles/gitlab_runner/vars/main.yml
