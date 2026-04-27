@@ -10,7 +10,7 @@
   hosts: all
   become: true
   roles:
-    # - ufw
-    # - docker
-    # - node_exporter
+    - ufw
+    - docker
+    - node_exporter
     - gitlab_runner

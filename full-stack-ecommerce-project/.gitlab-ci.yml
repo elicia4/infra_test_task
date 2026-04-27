@@ -1,0 +1,14 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  tags:
+    - deploy
+  script:
+    - set -e
+    - docker compose up -d --build --remove-orphans
+    - docker compose ps
+    - docker image prune -f
+  only:
+    - main
