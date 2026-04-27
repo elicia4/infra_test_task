@@ -1,8 +1,8 @@
 # Hometask
 
-Host environment: Generic Linux
-Tested VM: Ubuntu 24.04
-The Ansible host values must be defined in `ansible/host_vars/us2604.yml`
+- Host environment: Generic Linux
+- Tested VM: Ubuntu 24.04
+- The Ansible host values must be defined in `ansible/host_vars/us2604.yml`
 
 To create the GitLab environment:
 
