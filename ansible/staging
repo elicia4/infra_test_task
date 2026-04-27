@@ -1,0 +1,14 @@
+[base]
+us2604
+
+[ufw]
+us2604
+
+[docker]
+us2604
+
+[node_exporter]
+us2604
+
+[gitlab_runner]
+us2604

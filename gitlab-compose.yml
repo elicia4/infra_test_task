@@ -1,0 +1,31 @@
+name: hometask-vcs
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:18.11.1-ce.0
+    container_name: gitlab
+    restart: unless-stopped
+    hostname: 'gitlab.hometask.xyz'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab.hometask.xyz'
+    ports:
+      - '80:80'
+      - '443:443'
+      - '2222:22'
+    volumes:
+      - 'gitlab_config:/etc/gitlab'
+      - 'gitlab_logs:/var/log/gitlab'
+      - 'gitlab_data:/var/opt/gitlab'
+    shm_size: '256m'
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost/-/readiness"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 5m
+
+volumes:
+  gitlab_config:
+  gitlab_logs:
+  gitlab_data:

@@ -1,0 +1,132 @@
+---
+- name: "Create .gitlab-runner dir"
+  ansible.builtin.file:
+    path: "{{ gitlab_runner_config_file_location }}"
+    state: directory
+    mode: "0700"
+  become: "{{ gitlab_runner_system_mode }}"
+  when: not gitlab_runner_container_install
+
+- name: "Ensure config.toml exists"
+  ansible.builtin.file:
+    path: "{{ gitlab_runner_config_file }}"
+    state: touch
+    modification_time: preserve
+    access_time: preserve
+    mode: "0600"
+  become: "{{ gitlab_runner_system_mode }}"
+
+- name: "Set concurrent option"
+  ansible.builtin.lineinfile:
+    dest: "{{ gitlab_runner_config_file }}"
+    regexp: ^(\s*)concurrent =
+    line: \1concurrent = {{ gitlab_runner_concurrent }}
+    state: present
+    backrefs: true
+  no_log: "{{ gitlab_runner_no_log_secrets | default(false) }}"
+  become: "{{ gitlab_runner_system_mode }}"
+  notify:
+    - restart_gitlab_runner
+
+- name: "Set check_interval option"
+  ansible.builtin.lineinfile:
+    dest: "{{ gitlab_runner_config_file }}"
+    regexp: ^check_interval =
+    line: check_interval = {{ gitlab_runner_check_interval }}
+    insertafter: \s*concurrent.*
+    state: present
+  no_log: "{{ gitlab_runner_no_log_secrets | default(false) }}"
+  become: "{{ gitlab_runner_system_mode }}"
+  notify:
+    - restart_gitlab_runner
+
+- name: "Add listen_address to config"
+  ansible.builtin.lineinfile:
+    dest: "{{ gitlab_runner_config_file }}"
+    regexp: ^listen_address =
+    line: listen_address = "{{ gitlab_runner_listen_address }}"
+    insertafter: \s*concurrent.*
+    state: present
+  no_log: "{{ gitlab_runner_no_log_secrets | default(false) }}"
+  when: gitlab_runner_listen_address | length > 0
+  become: "{{ gitlab_runner_system_mode }}"
+  notify:
+    - restart_gitlab_runner
+
+- name: "Add log_format to config"
+  ansible.builtin.lineinfile:
+    dest: "{{ gitlab_runner_config_file }}"
+    regexp: ^log_format =
+    line: log_format = "{{ gitlab_runner_log_format | default("runner") }}"
+    insertbefore: BOF
+    state: present
+  no_log: "{{ gitlab_runner_no_log_secrets | default(false) }}"
+  when: gitlab_runner_log_format is defined
+  become: "{{ gitlab_runner_system_mode }}"
+  notify:
+    - restart_gitlab_runner
+
+- name: "Add log_level to config"
+  ansible.builtin.lineinfile:
+    dest: "{{ gitlab_runner_config_file }}"
+    regexp: ^log_level =
+    line: log_level = "{{ gitlab_runner_log_level }}"
+    insertbefore: BOF
+    state: present
+  no_log: "{{ gitlab_runner_no_log_secrets | default(false) }}"
+  when: gitlab_runner_log_level is defined
+  become: "{{ gitlab_runner_system_mode }}"
+  notify:
+    - restart_gitlab_runner
+
+- name: "Add sentry dsn to config"
+  ansible.builtin.lineinfile:
+    dest: "{{ gitlab_runner_config_file }}"
+    regexp: ^sentry_dsn =
+    line: sentry_dsn = "{{ gitlab_runner_sentry_dsn }}"
+    insertafter: \s*concurrent.*
+    state: present
+  no_log: "{{ gitlab_runner_no_log_secrets | default(false) }}"
+  when: gitlab_runner_sentry_dsn | length > 0
+  become: "{{ gitlab_runner_system_mode }}"
+  notify:
+    - restart_gitlab_runner
+
+- name: "Add session server listen_address to config"
+  ansible.builtin.lineinfile:
+    dest: "{{ gitlab_runner_config_file }}"
+    regexp: ^(\s+)listen_address =
+    line: '  listen_address = "{{ gitlab_runner_session_server_listen_address }}"'
+    insertafter: ^\s*\[session_server\]
+    state: "{{ 'present' if gitlab_runner_session_server_listen_address | length > 0 else 'absent' }}"
+  no_log: "{{ gitlab_runner_no_log_secrets | default(false) }}"
+  become: "{{ gitlab_runner_system_mode }}"
+  notify:
+    - restart_gitlab_runner
+
+- name: "Add session server advertise_address to config"
+  ansible.builtin.lineinfile:
+    dest: "{{ gitlab_runner_config_file }}"
+    regexp: ^\s*advertise_address =
+    line: '  advertise_address = "{{ gitlab_runner_session_server_advertise_address }}"'
+    insertafter: ^\s*\[session_server\]
+    state: "{{ 'present' if gitlab_runner_session_server_advertise_address | length > 0 else 'absent' }}"
+  become: "{{ gitlab_runner_system_mode }}"
+  no_log: "{{ gitlab_runner_no_log_secrets | default(false) }}"
+  notify:
+    - restart_gitlab_runner
+
+- name: "Add session server session_timeout to config"
+  ansible.builtin.lineinfile:
+    dest: "{{ gitlab_runner_config_file }}"
+    regexp: ^\s*session_timeout =
+    line: "  session_timeout = {{ gitlab_runner_session_server_session_timeout }}"
+    insertafter: ^\s*\[session_server\]
+    state: present
+  no_log: "{{ gitlab_runner_no_log_secrets | default(false) }}"
+  when:
+    - gitlab_runner_session_server_session_timeout is defined
+    - gitlab_runner_session_server_session_timeout > 0
+  become: "{{ gitlab_runner_system_mode }}"
+  notify:
+    - restart_gitlab_runner

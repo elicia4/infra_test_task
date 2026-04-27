@@ -1,0 +1,46 @@
+---
+- name: "Install GitLab Runner (Debian)"
+  ansible.builtin.include_tasks: install-debian.yml
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: "(Unix) Delete runners which were removed in GitLab"
+  ansible.builtin.command: "{{ gitlab_runner_executable }} verify --delete"
+  register: verified_runners
+  changed_when: '"Updated " in verified_runners.stderr'
+  check_mode: false
+  become: "{{ gitlab_runner_system_mode }}"
+
+- name: "List configured runners"
+  ansible.builtin.import_tasks: list-configured-runners-unix.yml
+
+- name: "(Unix) Register GitLab Runner"
+  ansible.builtin.include_tasks: register-runner.yml
+  vars:
+    actual_gitlab_runner_name: "{{ gitlab_runner.name | default(ansible_facts['hostname'] + '-' + gitlab_runner_index | string) }}"
+  when: gitlab_runner.token is defined or gitlab_runner_registration_token | string | length > 0
+  loop: "{{ gitlab_runner_runners }}"
+  loop_control:
+    index_var: gitlab_runner_index
+    loop_var: gitlab_runner
+  no_log: "{{ gitlab_runner_no_log_secrets | default(false) }}"
+
+- name: Unregister runners which are not longer configured
+  ansible.builtin.include_tasks: unregister-runner-if-not-longer-configured.yml
+  when: gitlab_unregister_runner_executors_which_are_not_longer_configured
+
+- name: Set global options (macOS/Debian/RedHat)
+  ansible.builtin.import_tasks: global-setup.yml
+  when: gitlab_runner_config_update_mode == 'by_config_toml' or
+    gitlab_runner_config_update_mode == 'by_registering'
+
+- name: (Unix) Configure GitLab Runner
+  ansible.builtin.include_tasks: config-runners.yml
+  when: gitlab_runner_config_update_mode == 'by_config_toml'
+
+- name: (Unix) Configure Gitlab Runner via template
+  when: gitlab_runner_config_update_mode == 'by_template'
+  # become cannot be used with include_task
+  become: "{{ gitlab_runner_system_mode }}"
+  block:
+    - name: (Unix) Load main tasks
+      ansible.builtin.include_tasks: template_config/main.yml

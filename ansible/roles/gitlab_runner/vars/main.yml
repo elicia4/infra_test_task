@@ -1,0 +1,18 @@
+---
+# Useful default paths for config files on Mac/Linux platforms
+__gitlab_runner_config_file_system_mode: /etc/gitlab-runner/config.toml
+__gitlab_runner_config_file_user_mode: ~/.gitlab-runner/config.toml
+
+gitlab_runner_registration_token_type: "authentication-token"
+gitlab_runner_runners:
+  - name: 'Docker GitLab Runner'
+    token: 'glrt-qaXnMvUyBxFdpCPBk3tDLW86MQp0OjEKdToxCw.01.120lypwi3'
+    url: 'http://gitlab.hometask.xyz'
+    request_concurrency: 2
+    executor: docker
+    docker_image: 'alpine'
+    tags:
+      - shared
+    docker_volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/cache"

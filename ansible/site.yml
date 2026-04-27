@@ -1,0 +1,16 @@
+---
+- name: Set up custom SSH port
+  hosts: all
+  become: true
+  gather_facts: false
+  roles:
+    - base
+
+- name: Configure UFW, Docker, node exporter, GitLab runner
+  hosts: all
+  become: true
+  roles:
+    # - ufw
+    # - docker
+    # - node_exporter
+    - gitlab_runner

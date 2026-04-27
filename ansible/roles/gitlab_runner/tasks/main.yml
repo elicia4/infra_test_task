@@ -1,0 +1,33 @@
+---
+- name: Add GitLab to hosts file
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "192.168.122.1 gitlab.hometask.xyz"
+    state: present
+
+- name: "Load platform-specific variables"
+  ansible.builtin.include_vars: "{{ lookup('first_found', possible_files) }}"
+  vars:
+    possible_files:
+      files:
+        - "{{ ansible_facts['distribution'] }}.yml"
+        - "{{ ansible_facts['os_family'] }}.yml"
+        - default.yml
+      paths:
+        - vars
+
+- name: "Validate GitLab Runner configurations"
+  ansible.builtin.include_tasks: validate-runner-config.yml
+  vars:
+    actual_gitlab_runner_name: "{{ gitlab_runner.name | default(ansible_facts['hostname'] + '-' + gitlab_runner_index | string) }}"
+  loop: "{{ gitlab_runner_runners }}"
+  loop_control:
+    label: "{{ actual_gitlab_runner_name }}"
+    index_var: gitlab_runner_index
+    loop_var: gitlab_runner
+
+- name: "Install GitLab Runner (Unix)"
+  vars:
+    gitlab_install_target_platform: unix
+  ansible.builtin.include_tasks: main-unix.yml
+  when: ansible_facts['os_family'] != 'Windows' and not gitlab_runner_container_install

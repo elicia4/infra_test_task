@@ -1,0 +1,5 @@
+# OS: Ubuntu Server 26.04
+ansible_host: 192.168.122.179
+ansible_port: 222 
+ansible_user: me 
+ansible_ssh_private_key_file: /home/me/.ssh/hometask

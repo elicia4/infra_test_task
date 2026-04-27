@@ -1,0 +1,299 @@
+---
+# for versions >= 10.x
+gitlab_runner_package_name: gitlab-runner
+gitlab_runner_helper_package_name: gitlab-runner-helper-images
+
+gitlab_runner_system_mode: true
+
+# gitlab_runner_package_version for version pinning on debian/redhat
+gitlab_runner_wanted_version: latest
+
+# This variable should not be modified usually as it depends on the gitlab_runner_wanted_version variable
+gitlab_runner_wanted_tag: "{{ 'latest' if gitlab_runner_wanted_version == 'latest' else ('v' + gitlab_runner_wanted_version) }}"
+
+# Override the install directory under Windows via host variables etc. (Default: c:/gitlab-runner)
+gitlab_runner_custom_install_directory: ""
+gitlab_runner_install_directory: >-
+  {{ gitlab_runner_default_install_directory
+  if (gitlab_runner_custom_install_directory == '')
+  else gitlab_runner_custom_install_directory }}
+
+# Overridden based on platform
+gitlab_runner_config_file: >-
+  {{ gitlab_runner_container_mount_path + '/config.toml'
+  if gitlab_runner_container_install
+  else (
+    __gitlab_runner_config_file_system_mode if gitlab_runner_system_mode
+    else __gitlab_runner_config_file_user_mode
+  ) }}
+gitlab_runner_config_file_location: "{{ gitlab_runner_config_file | dirname }}"
+gitlab_runner_executable: "{{ gitlab_runner_package_name }}"
+
+# Maximum number of global jobs to run concurrently
+gitlab_runner_concurrent: "{{ ansible_facts['processor_vcpus'] }}"
+
+# Defines the interval length, in seconds, between the runner checking for new jobs.
+# The default value is 0. If set to 0 or lower, the default value of GitLab runner is used, which is 3.
+gitlab_runner_check_interval: 0
+
+# GitLab coordinator URL
+gitlab_runner_coordinator_url: https://gitlab.com
+
+# GitLab registration token.
+gitlab_runner_registration_token: ""
+
+# Gitlab runner registration token type:
+# "authentication-token" - Register runner with --token option (new workflow https://docs.gitlab.com/ee/ci/runners/new_creation_workflow.html)
+# "registration-token" - Register runner with --registration-token option (deprecating in gitlab 16.0 but still usable and deleted in 18.0)
+# For gitlab version >= 16.0 it is advisable to specify token for each runner in 'gitlab_runner_runners' section
+# and set this variable to "authentication-token"
+gitlab_runner_registration_token_type: "registration-token"
+
+gitlab_runner_sentry_dsn: ""
+
+# GitLab TLS CA file
+tls_ca_file: ""
+
+# Prometheus Metrics & Monitoring
+gitlab_runner_listen_address: ""
+
+# Session server configuration
+gitlab_runner_session_server_listen_address: ""
+gitlab_runner_session_server_advertise_address: ""
+gitlab_runner_session_server_session_timeout: 1800
+
+# Skip the APT or YUM repository installation
+# You should provide a repository containing the needed packages before running this role.
+# Use this if you use a mirror repository
+# gitlab_runner_skip_package_repo_install: true
+
+# Path for the GitLab runner repository GPG keyring.
+# The GitLab installation script places the keyring in different locations depending on APT version:
+# - Modern APT (>= 1.1): /etc/apt/keyrings/runner_gitlab-runner-archive-keyring.gpg
+# - Legacy APT (< 1.1): /etc/apt/trusted.gpg.d/runner_gitlab-runner.gpg
+# Change this if you expect the keyring to be somewhere else.
+gitlab_runner_keyring_path: /etc/apt/keyrings/runner_gitlab-runner-archive-keyring.gpg
+
+gitlab_runner_config_update_mode: by_config_toml
+gitlab_unregister_runner_executors_which_are_not_longer_configured: false
+
+# default values for gitlab in container
+gitlab_runner_container_install: false
+gitlab_runner_container_image: gitlab/gitlab-runner
+gitlab_runner_container_tag: latest
+gitlab_runner_container_name: gitlab-runner
+gitlab_runner_container_mount_path: ""
+gitlab_runner_container_restart_policy: unless-stopped
+gitlab_runner_container_latest_update: false
+# you can define a network which the container connects to
+# this option uses network_mode, thus 'default' will use the first network found in docker network list
+gitlab_runner_container_network: default
+
+# List of ports to publish from the container to the host.
+gitlab_runner_container_published_ports: []
+
+# default state to restart
+gitlab_runner_restart_state: restarted
+
+# systemd service kill timeout (time to wait for running jobs on stop)
+gitlab_runner_timeout_stop_seconds: 7200
+
+# default value for log_format
+# gitlab_runner_log_format: runner
+
+# defines value for log_level
+# Defines the log level. Options are debug, info, warn, error, fatal, and panic.
+# This setting has lower priority than the level set by the command-line arguments --debug, -l, or --log-level.
+# gitlab_runner_log_level: "warning"
+
+# default value for force accept self signed certificates
+force_accept_gitlab_server_self_signed: false
+
+# controls diffs for assemble config file
+gitlab_runner_show_config_diff: false
+
+# controls whether the role verifies permissions and access on the builds_dir and cache_dir (Unix support only)
+gitlab_runner_verify_directories: true
+
+# controls logs on ansible configuration tasks, uncomment to prevent secret leaks (Unix support only).
+# gitlab_runner_no_log_secrets: yes
+
+# controls whether remove ~/.bash_logout from runner home directory
+# See https://docs.gitlab.com/runner/shells/#shell-profile-loading
+gitlab_runner_remove_bash_logout: false
+
+# A list of runners to register and configure
+gitlab_runner_runners:
+  # The identifier of the runner.
+  - name: "{{ ansible_hostname }}"
+    # set to 'absent' if you want to delete the runner. Defaults to 'present'.
+    state: present
+    # The executor used by the runner.
+    executor: shell
+    # The authentication token.
+    # Needs to be provided when gitlab_runner_registration_token_type is set to 'authentication-token'
+    # token:
+    # Set maximum build log size in kilobytes.
+    output_limit: 4096
+    # Maximum number of jobs to run concurrently on this specific runner.
+    # Defaults to 0, simply means don't limit.
+    concurrent_specific: "0"
+    # Limits concurrent HTTP requests to GitLab API per runner configuration
+    # See at https://support.gitlab.com/hc/en-us/articles/21324350882076-GitLab-Runner-Concurrency-Tuning-Understanding-request-concurrency
+    # request_concurrency:
+    # The default Docker image to use. Required when executor is `docker`.
+    docker_image: ""
+    # Set to override the default helper image that is used.
+    # docker_helper_image: 'gitlab/gitlab-runner-helper-linux:latest'
+    #
+    # The tags assigned to the runner.
+    tags: []
+    # Indicates whether this runner can pick jobs without tags.
+    run_untagged: true
+    # Indicates whether this runner should only pick jobs from protected branches.
+    protected: false
+    # Docker privileged mode
+    docker_privileged: false
+    # Runner Locked. When a runner is locked, it cannot be assigned to other projects
+    locked: "false"
+    # Add container to a custom network
+    docker_network_mode: bridge
+    # Change the services startup timeout
+    # docker_wait_for_services_timeout: 30
+    # Custom CA certificate file
+    # tls_ca_file: "/etc/ssl/private/Custom_Bundle-CA.pem"
+    # Client certificate file to (mTLS) authenticate with the peer
+    # tls_cert_file: "/etc/gitlab-runner/ssl/gitlab-runner.cert.pem"
+    # Client certificate's key file to (mTLS) authenticate with the peer
+    # tls_key_file: "/etc/gitlab-runner/ssl/gitlab-runner.key.pem"
+    #
+    # Custom environment variables injected to build environment
+    env_vars: []
+    # Sets the clone_url. The default is not set.
+    # clone_url:
+    #
+    # Sets the pre_get_sources_script. The default is not set.
+    # pre_get_sources_script:
+    #
+    # Sets the post_get_sources_script.  The default is not set.
+    # post_get_sources_script:
+    #
+    # Sets the pre_build_script. The default is not set.
+    # pre_build_script:
+    #
+    # Sets the post_build_script. The default is not set.
+    # post_build_script:
+    #
+    # Add [[runner.docker.services]] for docker executor
+    # docker_services:
+    #   - name: docker:20.10.12-dind
+    #     command: ["--insecure-registry=10.0.0.0/24"]
+
+    # Runner SSH user
+    # ssh_user: ''
+    #
+    # Runner SSH host
+    # ssh_host: ''
+    #
+    # Runner SSH port
+    # ssh_port: ''
+    #
+    # Runner SSH password
+    # ssh_password: ''
+    #
+    # Runner SSH identity file
+    # ssh_identity_file: ''
+    #
+    # Virtualbox executor configuration params
+    # Base VM name (Required for runner registration!)
+    # virtualbox_base_name: "MyPerfectVMForGitlabVirtualboxExecutor"
+    #
+    # Base VM snapshot name
+    # virtualbox_base_snapshot: ""
+    #
+    # Base VM base folder
+    # virtualbox_base_folder: ""
+    #
+    # Not use VM snapshots for agent launch(false==Use snapshots, true==Do not use snapshots)
+    # virtualbox_disable_snapshots: false
+    #
+    # Cache type
+    # cache_type: 's3|gcs'
+    #
+    # Cache path
+    # cache_path: prefix/key
+    #
+    # Cache shared
+    # cache_shared: false
+    #
+    # Cache S3 server address
+    # cache_s3_server_address: "s3.amazonaws.com"
+    #
+    # Cache S3 access key
+    # cache_s3_access_key: "AMAZON_S3_ACCESS_KEY"
+    #
+    # Cache S3 secret key
+    # cache_s3_secret_key: "AMAZON_S3_SECRET_KEY"
+    #
+    # Cache S3 bucket name
+    # cache_s3_bucket_name: "my-bucket"
+    #
+    # Cache S3 bucket location
+    # cache_s3_bucket_location: "eu-west-1"
+    #
+    # Cache S3 insecure
+    # cache_s3_insecure: false
+    #
+    # Cache GCS Bucket name
+    # cache_gcs_bucket_name: "my-bucket"
+    #
+    # Cache GCS CredentialsFile
+    # cache_gcs_credentials_file: "/path/to/key_file.json"
+    #
+    # Cache GCS Access ID
+    # cache_gcs_access_id: "cache-access-account@project.iam.gserviceaccount.com"
+    #
+    # Cache GCS Private Key
+    # cache_gcs_private_key: "-----BEGIN PRIVATE KEY-----\nXXXXXX\n-----END PRIVATE KEY-----\n"
+    #
+    # Cache azure account name
+    # cache_azure_account_name: "<AZURE STORAGE ACCOUNT NAME>"
+    #
+    # Cache azure account key
+    # cache_azure_account_key: "<AZURE STORAGE ACCOUNT KEY>"
+    #
+    # Cache azure container name
+    # cache_azure_container_name: "runners-cache"
+    #
+    # Cache azure storage domain
+    # cache_azure_storage_domain: "blob.core.windows.net"
+    #
+    # Builds directory
+    # builds_dir: '/builds_dir'
+    #
+    # Cache directory
+    # cache_dir: '/cache'
+    #
+    # Feature Flags
+    # See https://docs.gitlab.com/runner/configuration/feature-flags.html#available-feature-flags
+    #
+    # Sets feature flags. The default is not set.
+    # feature_flags:
+    #   - FF_TIMESTAMPS
+    #
+    # Extra registration option
+    # extra_registration_option: '--maximum-timeout=3600'
+    #
+    # Extra configuration options to change in the config.toml file
+    # This parameter is a dictionary where the first level keys are TOML section names
+    # Full list of configuration are available on Gitlab Runner documentation:
+    # See https://docs.gitlab.com/runner/configuration/advanced-configuration.html
+    #
+    # extra_configs:
+    #   runners.docker:
+    #     memory: 512m
+    #     allowed_images: ["ruby:*", "python:*", "php:*"]
+    #   runners.docker.sysctls:
+    #     net.ipv4.ip_forward: "1"
+    #   runners.docker.container_labels:
+    #     com.gitlab.gitlab-runner.job.name: "$CI_JOB_NAME"
