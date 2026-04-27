@@ -16,4 +16,6 @@ gitlab_runner_runners:
       - deploy
     docker_volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "/cache"
+    extra_configs:
+      runners.docker:
+        extra_hosts: ["gitlab.hometask.xyz:192.168.122.1"]
