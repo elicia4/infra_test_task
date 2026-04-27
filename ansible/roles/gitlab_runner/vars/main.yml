@@ -9,13 +9,10 @@ gitlab_runner_runners:
     token: 'glrt-8l0V7TeLZdMeBMTo2FmXW286MQp0OjEKdToxCw.01.121xggjou'
     url: 'http://gitlab.hometask.xyz'
     request_concurrency: 2
-    executor: docker
-    docker_image: 'docker'
+    executor: shell
     tags:
       - shared
       - deploy
-    docker_volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
     extra_configs:
       runners.docker:
         extra_hosts: ["gitlab.hometask.xyz:192.168.122.1"]
