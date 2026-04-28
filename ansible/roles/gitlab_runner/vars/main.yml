@@ -6,7 +6,7 @@ __gitlab_runner_config_file_user_mode: ~/.gitlab-runner/config.toml
 gitlab_runner_registration_token_type: "authentication-token"
 gitlab_runner_runners:
   - name: 'Docker GitLab Runner'
-    token: 'glrt-8l0V7TeLZdMeBMTo2FmXW286MQp0OjEKdToxCw.01.121xggjou'
+    token: 'glrt--ijwJvupUGKL4B2HNKuP1W86MQp0OjEKdToxCw.01.120flu1ox'
     url: 'http://gitlab.hometask.xyz'
     request_concurrency: 2
     executor: shell

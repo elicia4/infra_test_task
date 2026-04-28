@@ -1,6 +1,6 @@
 # OS: Ubuntu Server 24.04
 # NB! All of these values have to be adjusted to your environment
-ansible_host: 192.168.122.179
+ansible_host: 192.168.122.115
 ansible_port: 222
 ansible_user: me
 ansible_ssh_private_key_file: /home/me/.ssh/hometask

@@ -31,3 +31,9 @@
     gitlab_install_target_platform: unix
   ansible.builtin.include_tasks: main-unix.yml
   when: ansible_facts['os_family'] != 'Windows' and not gitlab_runner_container_install
+
+- name: Add gitlab-runner to docker group
+  ansible.builtin.user:
+    name: gitlab-runner
+    groups: docker
+    append: yes
