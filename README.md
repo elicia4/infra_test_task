@@ -23,7 +23,9 @@ hostname.
 Then Ansible can be run with:
 
 ```bash
+cd ansible/
 ansible-playbook site.yml
+cd ..
 ```
 
 You then move the contents of `./full-stack-ecommerce-project/` to the cloned
