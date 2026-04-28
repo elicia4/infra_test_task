@@ -1,68 +1,63 @@
 services:
   db:
     image: mysql:8.0
-    container_name: ecommerce-db
-    command: --lower-case-table-names=1
-    restart: unless-stopped
+    # https://dev.mysql.com/doc/refman/8.4/en/identifier-case-sensitivity.html
+    command: --lower-case-table-names=1 
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
-      MYSQL_DATABASE:      ${MYSQL_DATABASE:-full-stack-ecommerce}
-      MYSQL_USER:          ${MYSQL_USER:-ecomuser}
-      MYSQL_PASSWORD:      ${MYSQL_PASSWORD:-ecompassword}
-    ports:
-      - "3306:3306"
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE:      full-stack-ecommerce
+      MYSQL_USER:          user
+      MYSQL_PASSWORD:      pass
     volumes:
       - db_data:/var/lib/mysql
       - ./backend/sql-resources:/docker-entrypoint-initdb.d:ro
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost",
-             "-u", "${MYSQL_USER:-ecomuser}",
-             "-p${MYSQL_PASSWORD:-ecompassword}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+    ports:
+      - "3306:3306"
     networks:
-      - ecommerce-net
+      - app-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user",
+             "-ppass"]
+      interval: 10s
+      timeout:  5s
+      retries:  10
+      start_period: 30s
+    restart: unless-stopped
 
   backend:
     build:
       context: ./backend/spring-boot-ecommerce
       dockerfile: Dockerfile
-    container_name: ecommerce-backend
-    restart: unless-stopped
     environment:
-      SPRING_DATASOURCE_URL:      jdbc:mysql://db:3306/${MYSQL_DATABASE:-full-stack-ecommerce}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-ecomuser}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-ecompassword}
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/full-stack-ecommerce?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: pass
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "false"
     ports:
       - "8090:8090"
+    networks:
+      - app-net
     depends_on:
       db:
         condition: service_healthy
-    networks:
-      - ecommerce-net
+    restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend/angular-ecommerce
       dockerfile: Dockerfile
-    container_name: ecommerce-frontend
-    restart: unless-stopped
     ports:
       - "8000:80"
+    networks:
+      - app-net
     depends_on:
       backend:
         condition: service_started
-    networks:
-      - ecommerce-net
+    restart: unless-stopped
 
 volumes:
   db_data:
-    driver: local
 
 networks:
-  ecommerce-net:
-    driver: bridge
+  app-net:
