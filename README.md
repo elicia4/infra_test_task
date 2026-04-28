@@ -28,12 +28,12 @@ ansible-playbook site.yml
 cd ..
 ```
 
-Now you have to move the contents of `./full-stack-ecommerce-project/` to the
-locally cloned GitLab repository `./hometask/`, commit all changes and push,
-thus triggerring the pipeline:
+Now you have to move the contents of `./ecomm-app/` to the locally cloned
+GitLab repository `./hometask/`, commit all changes and push, thus triggerring
+the pipeline:
 
 ```bash
-cp -r ./full-stack-ecommerce-project/* ./hometask/
+cp -r ./ecomm-app/* ./hometask/
 cd ./hometask/
 git add .
 git commit -m "initial commit"

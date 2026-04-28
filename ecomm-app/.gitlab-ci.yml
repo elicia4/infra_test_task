@@ -8,7 +8,7 @@ deploy:
   script:
     - set -e
     - docker compose down -v
-    - docker compose up -d --build --remove-orphans
+    - docker compose up -d --build
     - docker compose ps
     - docker image prune -f
   only:
