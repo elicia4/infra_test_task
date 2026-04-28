@@ -5,7 +5,6 @@
 
 docker ps -q | xargs -r docker stop # stop running containers
 docker system prune -af --volumes   # remove all unused resources
-docker image prune -af              # remove all unused images
 
 # list everything
 docker ps -a
