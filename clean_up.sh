@@ -1,9 +1,11 @@
 #!/bin/bash
+#
+# Clean up Docker and the working directory for the lab
+# !!! DESTRUCTIVE, READ THE SCRIPT FIRST !!!
 
-docker stop $(docker ps -a -q) # stop all containers
-docker container prune -f      # remove all stopped containers
-docker network prune -f        # remove all unused networks
-docker volume prune -af        # remove all volumes
+docker ps -q | xargs -r docker stop # stop running containers
+docker system prune -af --volumes   # remove all unused resources
+docker image prune -af              # remove all unused images
 
 # list everything
 docker ps -a
@@ -11,6 +13,7 @@ docker volume ls
 docker network ls
 docker images
 
+# clean up the environment, remove entries from known_hosts
 rm -rfv ~/.ssh/glab-task*
 rm -rfv ./hometask/
-echo -n > ~/.ssh/known_hosts
+> ~/.ssh/known_hosts
