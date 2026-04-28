@@ -41,3 +41,7 @@ git push
 You should now see the job running on GitLab:
 
 ![](./img/local_gitlab_job_success.png)
+
+CI-provisioned application works:
+
+![](./img/ci-provisioned_app_working_on_vm.png)
