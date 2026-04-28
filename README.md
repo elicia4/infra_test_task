@@ -3,7 +3,7 @@
 - Host environment: Generic Linux
 - Tested VM: Ubuntu 24.04
 - The Ansible host values must be defined in `ansible/host_vars/us2404.yml`
-- passwordless sudo user is assumed have been configured on the VM
+- passwordless sudo user is assumed to be configured on the VM
 
 To create the GitLab environment:
 
